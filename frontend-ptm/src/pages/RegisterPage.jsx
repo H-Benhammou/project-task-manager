@@ -64,8 +64,10 @@ export const RegisterPage = () => {
         try {
             await register(formData.name, formData.email, formData.password);
             navigate('/dashboard');
-        } catch (err) {
-            setErrors({ general: 'Erreur lors de l\'inscription. L\'email existe peut-être déjà.' });
+        } catch (error) {
+            setErrors({
+                general: error.response?.data?.message || 'Erreur lors de l\'inscription. L\'email existe peut-être déjà.'
+            });
         } finally {
             setLoading(false);
         }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
@@ -21,24 +21,7 @@ export const DashboardPage = () => {
         overallProgress: 0,
     });
 
-    useEffect(() => {
-        loadProjects();
-    }, []);
-
-    const loadProjects = async () => {
-        try {
-            setLoading(true);
-            const data = await projectService.getAllProjects();
-            setProjects(data);
-            calculateStats(data);
-        } catch (error) {
-            console.error('Error loading projects:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const calculateStats = (projectsData) => {
+    const calculateStats = useCallback((projectsData) => {
         const totalProjects = projectsData.length;
         const totalTasks = projectsData.reduce((sum, p) => sum + p.totalTasks, 0);
         const completedTasks = projectsData.reduce((sum, p) => sum + p.completedTasks, 0);
@@ -51,7 +34,24 @@ export const DashboardPage = () => {
             overdueTasks: 0,
             overallProgress,
         });
-    };
+    }, []);
+
+    const loadProjects = useCallback(async () => {
+        try {
+            setLoading(true);
+            const data = await projectService.getAllProjects();
+            setProjects(data);
+            calculateStats(data);
+        } catch (error) {
+            console.error('Error loading projects:', error);
+        } finally {
+            setLoading(false);
+        }
+    }, [calculateStats]);
+
+    useEffect(() => {
+        loadProjects();
+    }, [loadProjects]);
 
     const handleCreateProject = async (formData) => {
         try {
