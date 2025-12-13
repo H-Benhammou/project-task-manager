@@ -1,0 +1,19 @@
+package com.example.project_task_manager.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+public class ProjectSummaryResponse {
+    private Long id;
+    private String title;
+    private String description;
+    private int totalTasks;
+    private int completedTasks;
+    private double progressPercentage;
+}
