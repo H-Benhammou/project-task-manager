@@ -3,6 +3,7 @@ package com.example.project_task_manager.service;
 import com.example.project_task_manager.dto.AuthRequest;
 import com.example.project_task_manager.dto.AuthResponse;
 import com.example.project_task_manager.dto.RegisterRequest;
+import com.example.project_task_manager.dto.UserDTO;
 import com.example.project_task_manager.entity.User;
 import com.example.project_task_manager.repository.UserRepository;
 import com.example.project_task_manager.security.JwtService;
@@ -37,9 +38,14 @@ public class AuthService {
         userRepository.save(user);
         var jwtToken = jwtService.generateToken(user);
 
+        UserDTO userDTO = new UserDTO();
+        userDTO.setId(user.getId().toString());
+        userDTO.setName(user.getName());
+        userDTO.setEmail(user.getEmail());
+
         return AuthResponse.builder()
                 .token(jwtToken)
-                .email(user.getEmail())
+                .user(userDTO)
                 .message("User registered successfully")
                 .build();
     }
@@ -56,9 +62,14 @@ public class AuthService {
                 .orElseThrow();
         var jwtToken = jwtService.generateToken(user);
 
+        UserDTO userDTO = new UserDTO();
+        userDTO.setId(user.getId().toString());
+        userDTO.setName(user.getName());
+        userDTO.setEmail(user.getEmail());
+
         return AuthResponse.builder()
                 .token(jwtToken)
-                .email(user.getEmail())
+                .user(userDTO)
                 .message("Login successful")
                 .build();
     }
