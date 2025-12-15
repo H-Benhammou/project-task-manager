@@ -1,4 +1,5 @@
-import { useState } from 'react';
+// src/pages/LoginPage.tsx
+import { useState, useEffect } from 'react';
 import { CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Input from '../components/Input';
@@ -14,6 +15,12 @@ export default function LoginPage() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Clear any existing tokens when component mounts
+  useEffect(() => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -54,14 +61,14 @@ export default function LoginPage() {
           password: formData.password,
         });
         
-       // Store token and user info
-    localStorage.setItem("token", response.token);
-    localStorage.setItem("user", JSON.stringify(response.user));
+        console.log('Login successful:', response);
 
         // Redirect to dashboard
         navigate('/dashboard');
         
       } catch (error: any) {
+        console.error('Login error:', error);
+        
         // Handle errors
         if (error.response?.status === 401) {
           setErrors({ email: 'Invalid email or password' });

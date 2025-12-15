@@ -3,7 +3,7 @@ import { CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Input from '../components/Input';
 import PasswordInput from '../components/PasswordInput';
-import { signupService } from '../services/SignupService';
+import { signupService } from '../services/signupService';
 
 export default function SignUpPage() {
 

@@ -17,7 +17,20 @@ export interface LoginResponse {
 
 export const loginService = {
     login: async (data: LoginData): Promise<LoginResponse> => {
+        // Clear any existing token before login
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        
         const response = await api.post("/auth/login", data);
+        
+        // Store the new token and user info
+        if (response.data.token) {
+            localStorage.setItem("token", response.data.token);
+        }
+        if (response.data.user) {
+            localStorage.setItem("user", JSON.stringify(response.data.user));
+        }
+        
         return response.data;
     },
 
@@ -32,6 +45,7 @@ export const loginService = {
     },
 
     isAuthenticated: () => {
-        return !!localStorage.getItem("token");
+        const token = localStorage.getItem("token");
+        return !!token;
     },
 };
