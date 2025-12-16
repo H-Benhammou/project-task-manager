@@ -32,7 +32,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, user
       <aside
         className={`${
           sidebarOpen ? 'w-64' : 'w-0'
-        } bg-white border-r border-gray-200 transition-all duration-300 overflow-hidden`}
+        } bg-white border-r border-gray-200 transition-all duration-300 overflow-hidden relative`}
       >
         <div className="p-6">
           <div className="flex items-center gap-2 mb-8">

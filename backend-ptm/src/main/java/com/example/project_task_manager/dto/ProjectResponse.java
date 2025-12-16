@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 @AllArgsConstructor
@@ -15,6 +17,7 @@ public class ProjectResponse {
     private String description;
     private String ownerName;
     private String ownerEmail;
+    private LocalDateTime creationDate;
     private int totalTasks;
     private int completedTasks;
     private double progressPercentage;

@@ -13,6 +13,8 @@ public class TaskMapper {
                 .title(task.getTitle())
                 .description(task.getDescription())
                 .dueDate(task.getDueDate())
+                .creationDate(task.getCreationDate())
+                .updateDate(task.getUpdateDate())
                 .status(task.getStatus())
                 .projectId(task.getProject().getId())
                 .projectTitle(task.getProject().getTitle())

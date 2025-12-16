@@ -3,6 +3,7 @@ package com.example.project_task_manager.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -22,6 +23,10 @@ public class Project {
     private String title;
 
     private String description;
+
+    @Column(name = "creation_date", updatable = false)
+    private LocalDateTime creationDate;
+
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -46,5 +51,10 @@ public class Project {
         if (total == 0) return 0.0;
         double percentage =  (getCompletedTasks() * 100.0) / total;
         return Math.round(percentage * 10.0) / 10.0;
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        this.creationDate = LocalDateTime.now();
     }
 }
