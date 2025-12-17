@@ -116,7 +116,7 @@ export default function LoginPage() {
               Welcome Back
             </h1>
             <p className="text-lg text-gray-600 mb-8">
-              Sign in to your account to continue managing your projects and collaborating with your team.
+              Sign in to your account to continue managing your projects.
             </p>
 
             <div className="space-y-6">
@@ -145,9 +145,12 @@ export default function LoginPage() {
                   <CheckCircle className="w-6 h-6 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">Team Collaboration</h3>
-                  <p className="text-gray-600 text-sm">Work seamlessly with your team in real-time.</p>
+                  <h3 className="font-semibold text-gray-900 mb-1">Progress Tracking</h3>
+                  <p className="text-gray-600 text-sm">
+                    Monitor project and task progress in real-time with detailed statistics.
+                  </p>
                 </div>
+
               </div>
             </div>
           </div>
@@ -186,9 +189,6 @@ export default function LoginPage() {
                   />
                   <span className="text-sm text-gray-600">Remember me</span>
                 </label>
-                <a href="#" className="text-sm text-blue-600 hover:underline">
-                  Forgot password?
-                </a>
               </div>
 
               <button

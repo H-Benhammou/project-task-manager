@@ -120,7 +120,7 @@ export default function SignUpPage() {
               Create Your Account
             </h1>
             <p className="text-lg text-gray-600 mb-8">
-              Join thousands of teams already using TaskFlow to manage their projects efficiently.
+              Join us in TaskFlow to manage projects efficiently.
             </p>
 
             <div className="space-y-6">
@@ -129,9 +129,11 @@ export default function SignUpPage() {
                   <CheckCircle className="w-6 h-6 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">Collaborate Seamlessly</h3>
-                  <p className="text-gray-600 text-sm">Work together with your team in real-time on projects and tasks.</p>
-                </div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Due Date Management</h3>
+                  <p className="text-gray-600 text-sm">
+                    Keep track of deadlines and never miss an important task.
+                  </p>
+              </div>
               </div>
 
               <div className="flex items-start gap-3">
@@ -213,7 +215,9 @@ export default function SignUpPage() {
 
               <p className="text-center text-sm text-gray-600 mt-4">
                 Already have an account?{' '}
-                <span className="text-blue-600 hover:underline font-medium cursor-pointer">
+                <span 
+                  onClick={() => navigate('/login')}
+                className="text-blue-600 hover:underline font-medium cursor-pointer">
                   Sign In
                 </span>
               </p>
