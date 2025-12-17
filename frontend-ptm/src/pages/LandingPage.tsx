@@ -17,9 +17,9 @@ export default function ProjectManagementLanding() {
             className="text-2xl font-bold text-gray-900">TaskFlow</span>
           </div>
           <nav className="flex items-center gap-8">
-            <a href="#" className="text-gray-600 hover:text-gray-900">Projects</a>
-            <a href="#" className="text-gray-600 hover:text-gray-900">Services</a>
-            <button className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            <a href="/services" className="text-gray-600 hover:text-gray-900">Services</a>
+            <button onClick={() => navigate('/login')}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
               Sign In
             </button>
           </nav>

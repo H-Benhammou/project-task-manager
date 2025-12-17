@@ -32,11 +32,16 @@ public class TaskService {
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .dueDate(request.getDueDate())
-                .status(request.getStatus() != null ? request.getStatus() : TaskStatus.IN_PROGRESS)
+                .status(TaskStatus.IN_PROGRESS)
                 .project(project)
                 .build();
 
         Task savedTask = taskRepository.save(task);
+
+        // Update project's last modified date
+        project.updateLastModifiedDate();
+        projectRepository.save(project);
+
         return taskMapper.toResponse(savedTask);
     }
 
@@ -66,7 +71,7 @@ public class TaskService {
     @Transactional
     public TaskResponse updateTask(Long projectId, Long taskId, TaskRequest request, Long userId) {
         // Verify user owns the project
-        projectRepository.findByIdAndUserId(projectId, userId)
+        Project project = projectRepository.findByIdAndUserId(projectId, userId)
                 .orElseThrow(() -> new RuntimeException("Project not found or access denied"));
 
         Task task = taskRepository.findByIdAndProjectId(taskId, projectId)
@@ -75,18 +80,20 @@ public class TaskService {
         task.setTitle(request.getTitle());
         task.setDescription(request.getDescription());
         task.setDueDate(request.getDueDate());
-        if (request.getStatus() != null) {
-            task.setStatus(request.getStatus());
-        }
 
         Task updatedTask = taskRepository.save(task);
+
+        // Update project's last modified date
+        project.updateLastModifiedDate();
+        projectRepository.save(project);
+
         return taskMapper.toResponse(updatedTask);
     }
 
     @Transactional
     public TaskResponse markTaskAsCompleted(Long projectId, Long taskId, Long userId) {
         // Verify user owns the project
-        projectRepository.findByIdAndUserId(projectId, userId)
+        Project project = projectRepository.findByIdAndUserId(projectId, userId)
                 .orElseThrow(() -> new RuntimeException("Project not found or access denied"));
 
         Task task = taskRepository.findByIdAndProjectId(taskId, projectId)
@@ -94,18 +101,27 @@ public class TaskService {
 
         task.setStatus(TaskStatus.COMPLETED);
         Task updatedTask = taskRepository.save(task);
+
+        // Update project's last modified date
+        project.updateLastModifiedDate();
+        projectRepository.save(project);
+
         return taskMapper.toResponse(updatedTask);
     }
 
     @Transactional
     public void deleteTask(Long projectId, Long taskId, Long userId) {
         // Verify user owns the project
-        projectRepository.findByIdAndUserId(projectId, userId)
+        Project project = projectRepository.findByIdAndUserId(projectId, userId)
                 .orElseThrow(() -> new RuntimeException("Project not found or access denied"));
 
         Task task = taskRepository.findByIdAndProjectId(taskId, projectId)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
 
         taskRepository.delete(task);
+
+        // Update project's last modified date
+        project.updateLastModifiedDate();
+        projectRepository.save(project);
     }
 }

@@ -1,3 +1,4 @@
+// frontend-ptm/src/services/projectService.ts
 import api from "./api";
 
 export interface Project {
@@ -7,6 +8,7 @@ export interface Project {
     totalTasks: number;
     completedTasks: number;
     progressPercentage: number;
+    creationDate?: string;
 }
 
 export interface ProjectDetails extends Project {
@@ -21,10 +23,34 @@ export interface DashboardStats {
     completedTasks: number;
 }
 
+export interface PageResponse<T> {
+    content: T[];
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
+    first: boolean;
+    last: boolean;
+}
+
 export const projectService = {
     // Get all projects for the current user
     getAllProjects: async (): Promise<Project[]> => {
-        const response = await api.get("/projects");
+        const response = await api.get("/projects/all");
+        return response.data;
+    },
+
+    // Get paginated projects
+    getProjectsPage: async (page: number = 0, size: number = 6): Promise<PageResponse<Project>> => {
+        const response = await api.get("/projects", {
+            params: { page, size }
+        });
+        return response.data;
+    },
+
+    // Get recently modified projects (last 24 hours, max 5)
+    getRecentProjects: async (): Promise<Project[]> => {
+        const response = await api.get("/projects/recent");
         return response.data;
     },
 
@@ -55,20 +81,12 @@ export const projectService = {
     },
 
     // Calculate dashboard stats from projects
-    // A project is considered completed ONLY when ALL its tasks are completed
-    // This matches the backend logic in Project.getProgressPercentage()
     calculateStats: (projects: Project[]): DashboardStats => {
-        // Count completed projects: only those where ALL tasks are done
-        // (completedTasks === totalTasks AND totalTasks > 0)
         const completedProjects = projects.filter(
             p => p.totalTasks > 0 && p.completedTasks === p.totalTasks
         ).length;
         
-        // Active projects: projects that are not 100% complete
-        // This includes projects with no tasks or partially completed tasks
         const activeProjects = projects.length - completedProjects;
-        
-        // Sum up all tasks across all projects
         const totalTasks = projects.reduce((sum, p) => sum + p.totalTasks, 0);
         const completedTasks = projects.reduce((sum, p) => sum + p.completedTasks, 0);
 

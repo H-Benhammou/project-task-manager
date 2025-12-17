@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FolderKanban, ListTodo, CheckCircle2, TrendingUp, Plus, Clock } from 'lucide-react';
+import { FolderKanban, ListTodo, CheckCircle2, TrendingUp, Clock } from 'lucide-react';
 import { DashboardLayout } from '../layouts/DashboardLayout';
 import { projectService, type Project, type DashboardStats } from '../services/projectService';
 import { loginService } from '../services/loginService';
@@ -9,6 +9,7 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [recentProjects, setRecentProjects] = useState<Project[]>([]);
   const [stats, setStats] = useState<DashboardStats>({
     activeProjects: 0,
     completedProjects: 0,
@@ -37,11 +38,17 @@ export default function DashboardPage() {
     try {
       setLoading(true);
       setError(null);
-      const projectsData = await projectService.getAllProjects();
-      setProjects(projectsData);
       
-      // Calculate stats
-      const calculatedStats = projectService.calculateStats(projectsData);
+      // Fetch all projects for stats calculation
+      const allProjectsData = await projectService.getAllProjects();
+      setProjects(allProjectsData);
+      
+      // Fetch recent projects (last 24 hours, max 5)
+      const recentProjectsData = await projectService.getRecentProjects();
+      setRecentProjects(recentProjectsData);
+      
+      // Calculate stats from all projects
+      const calculatedStats = projectService.calculateStats(allProjectsData);
       setStats(calculatedStats);
     } catch (err: any) {
       console.error('Error fetching projects:', err);
@@ -82,10 +89,10 @@ export default function DashboardPage() {
         {/* Welcome Section */}
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-gray-800 mb-2">
-            Welcome back, {user.name.split(' ')[0]}!
+            Let’s get started, {user.name.split(' ')[0]}!
           </h2>
           <p className="text-gray-600">
-            Here's what's happening with your projects today.
+            Here's what's happening with your projects so far.
           </p>
         </div>
 
@@ -154,37 +161,30 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Projects Section */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+            {/* Recent Activity Section */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
               <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800">Your Projects</h3>
+                  <h3 className="text-lg font-semibold text-gray-800">Recent Activity</h3>
                   <p className="text-sm text-gray-500 mt-1">
-                    {projects.length} {projects.length === 1 ? 'project' : 'projects'} total
+                    Projects modified in the last 24 hours
                   </p>
                 </div>
                 <button 
-                  onClick={() => navigate('/projects/new')}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                  onClick={() => navigate('/projects')}
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
                 >
-                  <Plus className="w-4 h-4" />
-                  New Project
+                  View All Projects
                 </button>
               </div>
 
-              {projects.length === 0 ? (
-                <div className="px-6 py-12 text-center">
-                  <FolderKanban className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">No projects yet</h3>
-                  <p className="text-gray-600 mb-4">
-                    Create your first project to start organizing your tasks
+              {recentProjects.length === 0 ? (
+                <div className="px-6 py-8 text-center">
+                  <Clock className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <h3 className="text-base font-semibold text-gray-800 mb-1">No recent activity</h3>
+                  <p className="text-sm text-gray-600">
+                    No projects have been modified in the last 24 hours
                   </p>
-                  <button 
-                    onClick={() => navigate('/projects/new')}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                  >
-                    Create Your First Project
-                  </button>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
@@ -206,7 +206,7 @@ export default function DashboardPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                      {projects.map((project) => {
+                      {recentProjects.map((project) => {
                         const status = getProjectStatus(project);
                         return (
                           <tr 
@@ -263,6 +263,8 @@ export default function DashboardPage() {
               )}
             </div>
 
+            
+
             {/* Quick Info */}
             {projects.length > 0 && (
               <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -273,9 +275,7 @@ export default function DashboardPage() {
                       How project status works
                     </h4>
                     <p className="text-sm text-blue-700">
-                      Projects are automatically marked as <span className="font-semibold">Completed</span> when all tasks are completed. 
-                      Until then, they remain <span className="font-semibold">In Progress</span>. 
-                      The progress percentage shows how many tasks are done.
+                      The <span className="font-semibold">Recent Activity</span> section shows projects modified in the last 24 hours.
                     </p>
                   </div>
                 </div>

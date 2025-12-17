@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, LayoutDashboard, FolderKanban, LogOut, ChevronDown } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -12,6 +12,7 @@ interface DashboardLayoutProps {
 
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, user }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
@@ -21,9 +22,41 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, user
     navigate('/login');
   };
 
+  const pageTitles: Record<string, string> = {
+    '/dashboard': 'Dashboard',
+    '/projects': 'My Projects',
+    '/projects/new': 'Create New Project',
+  };
+
+  // Get the current page title, with fallback for dynamic routes like /projects/:id
+  const getCurrentPageTitle = () => {
+    // Check exact match first
+    if (pageTitles[location.pathname]) {
+      return pageTitles[location.pathname];
+    }
+    
+    // Check for dynamic routes
+    if (location.pathname.startsWith('/projects/') && location.pathname !== '/projects/new') {
+      return 'Project Details';
+    }
+    
+    // Default fallback
+    return 'Dashboard';
+  };
+
   const navItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard', active: true },
-    { icon: FolderKanban, label: 'My Projects', path: '/projects', active: false },
+    { 
+      icon: LayoutDashboard, 
+      label: 'Dashboard', 
+      path: '/dashboard', 
+      active: location.pathname === '/dashboard' 
+    },
+    { 
+      icon: FolderKanban, 
+      label: 'My Projects', 
+      path: '/projects', 
+      active: location.pathname.startsWith('/projects')
+    },
   ];
 
   return (
@@ -83,7 +116,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, user
               >
                 {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
-              <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
+              <h1 className="text-2xl font-bold text-gray-800">{getCurrentPageTitle()}</h1>
             </div>
 
             <div className="relative">

@@ -27,6 +27,8 @@ public class Project {
     @Column(name = "creation_date", updatable = false)
     private LocalDateTime creationDate;
 
+    @Column(name = "last_modified_date")
+    private LocalDateTime lastModifiedDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -34,6 +36,11 @@ public class Project {
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Task> tasks;
+
+    // Method to update last modified date when a task is modified
+    public void updateLastModifiedDate() {
+        this.lastModifiedDate = LocalDateTime.now();
+    }
 
     // Helper method to calculate progress
     public int getTotalTasks() {
@@ -56,5 +63,6 @@ public class Project {
     @PrePersist
     protected void onCreate() {
         this.creationDate = LocalDateTime.now();
+        this.lastModifiedDate = LocalDateTime.now();
     }
 }

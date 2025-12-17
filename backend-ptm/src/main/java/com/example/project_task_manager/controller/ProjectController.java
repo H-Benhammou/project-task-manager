@@ -6,6 +6,10 @@ import com.example.project_task_manager.dto.ProjectSummaryResponse;
 import com.example.project_task_manager.entity.User;
 import com.example.project_task_manager.service.ProjectService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -28,11 +32,28 @@ public class ProjectController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<List<ProjectSummaryResponse>> getAllProjects(
             @AuthenticationPrincipal User user) {
         List<ProjectSummaryResponse> projects = projectService.getAllUserProjects(user.getId());
         return ResponseEntity.ok(projects);
+    }
+
+    @GetMapping
+    public ResponseEntity<Page<ProjectSummaryResponse>> getProjectsPage(
+            @AuthenticationPrincipal User user,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "6") int size
+    ) {
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.DESC, "lastModifiedDate")
+        );
+
+        return ResponseEntity.ok(
+                projectService.getUserProjectsPage(user.getId(), pageable)
+        );
     }
 
     @GetMapping("/{projectId}")
@@ -41,6 +62,13 @@ public class ProjectController {
             @AuthenticationPrincipal User user) {
         ProjectResponse response = projectService.getProjectById(projectId, user.getId());
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/recent")
+    public ResponseEntity<List<ProjectSummaryResponse>> getRecentlyModifiedProjects(
+            @AuthenticationPrincipal User user) {
+        List<ProjectSummaryResponse> projects = projectService.getRecentlyModifiedProjects(user.getId());
+        return ResponseEntity.ok(projects);
     }
 
     @PutMapping("/{projectId}")

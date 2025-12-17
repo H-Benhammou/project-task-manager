@@ -11,4 +11,5 @@ public class TaskRequest {
     private String title;
     private String description;
     private LocalDate dueDate;
+    private TaskStatus status;
 }
