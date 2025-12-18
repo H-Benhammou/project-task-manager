@@ -4,6 +4,7 @@ import com.example.project_task_manager.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -26,10 +27,11 @@ public class SecurityConfig {
                 .cors(cors -> {})
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
-
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/test/public").permitAll()
+                        // Allow preflight requests
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        // Public endpoints
+                        .requestMatchers("/api/auth/**", "/api/test/public").permitAll()
+                        // All other endpoints require authentication
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->
@@ -40,6 +42,7 @@ public class SecurityConfig {
 
         return http.build();
     }
+
 
 
 }
