@@ -59,8 +59,7 @@ services:
       context: ./frontend-ptm
       dockerfile: Dockerfile
       args:
-        # Build-time variable for Vite
-        VITE_API_URL: /api
+        VITE_API_URL: http://taskflow-backend:8080/api
     container_name: taskflow-frontend
     restart: unless-stopped
     ports:
