@@ -1,6 +1,41 @@
 # TaskFlow - Project & Task Management System
 
-A full-stack project management application built with Spring Boot, React, and PostgreSQL.
+A full-stack project management application built with Spring Boot, React, and PostgreSQL. Manage your projects and tasks with an intuitive interface, real-time progress tracking, and secure authentication.
+
+## Features
+
+### Secure Authentication
+JWT-based authentication system ensuring your data is protected. Login with email and password to access your personalized workspace.
+
+### Project Management
+- Create and organize unlimited projects with titles and descriptions
+- View all projects in one centralized dashboard
+- Search projects quickly with built-in search functionality
+- Paginated project lists for efficient browsing
+
+### Task Organization
+- Add detailed tasks to each project with titles, descriptions, and due dates
+- Filter tasks based on their status (pending/completed)
+- Mark tasks as completed with a single click
+- Keep everything organized and on track
+
+### Progress Tracking
+Real-time progress calculation showing total tasks, completed tasks, and completion percentage for each project with visual progress bars and statistics.
+
+### CRUD Operations
+- **Create**: Launch new projects and tasks instantly
+- **Read**: View all projects, tasks, and their details
+- **Update**: Modify project and task information whenever needed
+- **Delete**: Remove tasks or projects that are no longer needed
+
+### Technical Highlights
+- Clean architecture with separation of concerns
+- RESTful API design
+- Comprehensive input validation
+- Robust error handling
+- Real-time updates and feedback
+- Responsive design for all devices
+- Modern, intuitive user interface
 
 ## Tools & Technologies
 
@@ -153,9 +188,19 @@ A full-stack project management application built with Spring Boot, React, and P
    npm run preview
    ```
 
-## Docker Setup (Alternative)
+## Docker Setup (Bonus)
 
-Run the entire application stack with Docker:
+The application is fully dockerized (frontend, backend, database) using Docker Compose.
+
+### Current Status
+- **Frontend container**: Works as expected
+- **Database container**: Works as expected
+- **Backend container**: Starts correctly, but API requests return HTTP 403 only in the Dockerized environment
+
+### Known Issue
+The 403 issue does not occur when running the backend locally. It is likely related to environment configuration (e.g., security, CORS, headers, or reverse proxy setup). Due to time constraints, this issue was not fully resolved.
+
+### Running with Docker
 
 1. **Ensure `.env` file is configured** (see Database Setup step 4)
 
@@ -171,7 +216,11 @@ Run the entire application stack with Docker:
 
 4. **Access the Application**
    - Frontend: `http://localhost:5173`
-   - Backend: `http://localhost:8080`
+   - Backend: `http://localhost:8080` (Note: 403 issue exists)
+
+### Future Work
+- Investigate and fix Docker-only 403 issue
+- Add comprehensive unit tests
 
 ## API Endpoints
 
@@ -198,9 +247,7 @@ Run the entire application stack with Docker:
 
 ## Default Credentials
 
-After setting up, you can register a new account or use these test credentials if seeded:
-
-**Note**: No default credentials are seeded. You must register a new account through the signup page.
+No default credentials are seeded. You must register a new account through the signup page.
 
 ## Project Structure
 
@@ -240,18 +287,6 @@ project-task-manager/
 └── .env
 ```
 
-## Features
-
-- ✅ User authentication with JWT
-- ✅ Project creation and management
-- ✅ Task creation with due dates
-- ✅ Task completion tracking
-- ✅ Progress calculation
-- ✅ Real-time updates
-- ✅ Responsive design
-- ✅ Pagination support
-- ✅ Recent activity tracking
-
 ## Troubleshooting
 
 ### Backend Issues
@@ -279,7 +314,3 @@ lsof -ti:5173 | xargs kill -9
 - Ensure backend is running on port 8080
 - Check `VITE_API_URL` in frontend `.env`
 - Verify CORS configuration
-
-## License
-
-This project is licensed under the MIT License.
