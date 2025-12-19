@@ -29,19 +29,20 @@ public class AuthService {
                     .build();
         }
 
-        var user = User.builder()
+        User user = User.builder()
                 .name(request.getName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .build();
 
-        userRepository.save(user);
-        var jwtToken = jwtService.generateToken(user);
+        User savedUser = userRepository.save(user);
+
+        String jwtToken = jwtService.generateToken(savedUser);
 
         UserDTO userDTO = new UserDTO();
-        userDTO.setId(user.getId().toString());
-        userDTO.setName(user.getName());
-        userDTO.setEmail(user.getEmail());
+        userDTO.setId(savedUser.getId().toString());
+        userDTO.setName(savedUser.getName());
+        userDTO.setEmail(savedUser.getEmail());
 
         return AuthResponse.builder()
                 .token(jwtToken)
@@ -49,6 +50,7 @@ public class AuthService {
                 .message("User registered successfully")
                 .build();
     }
+
 
     public AuthResponse login(AuthRequest request) {
         authenticationManager.authenticate(
