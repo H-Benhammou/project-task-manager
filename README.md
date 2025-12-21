@@ -296,7 +296,7 @@ return HTTP 403 responses. This is suspected to be related to Spring Security
 and/or CORS configuration differences between local and containerized environments.
 Due to time constraints, this issue is documented but not fully resolved.
 
-The non-Dockerized version fully satisfies all functional and technical requirements.
+The project was evaluated and validated using the non-Docker setup, which fully meets all internship requirements.
 
 
 ### Running with Docker
@@ -452,4 +452,5 @@ project-task-manager/
 ├── docker-compose.yml
 └── .env
 ```
+
 
