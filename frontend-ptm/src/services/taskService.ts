@@ -24,16 +24,39 @@ export interface TaskRequest {
     status?: TaskStatus;
 }
 
+export interface PageResponse<T> {
+    content: T[];
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
+    first: boolean;
+    last: boolean;
+}
+
 export const taskService = {
     // Get all tasks for a specific project
     getProjectTasks: async (projectId: number): Promise<Task[]> => {
-        const response = await api.get(`/projects/${projectId}/tasks`);
+        const response = await api.get(`/projects/${projectId}/tasks/all`);
         return response.data;
     },
 
     // Get a single task
     getTask: async (projectId: number, taskId: number): Promise<Task> => {
         const response = await api.get(`/projects/${projectId}/tasks/${taskId}`);
+        return response.data;
+    },
+
+    getProjectTasksPage: async (
+        projectId: number,
+        page: number = 0,
+        size: number = 5,
+        sortBy: string = "creationDate",
+        sortDirection: "ASC" | "DESC" = "DESC"
+    ): Promise<PageResponse<Task>> => {
+        const response = await api.get(`/projects/${projectId}/tasks`, {
+            params: { page, size, sortBy, sortDirection }
+        });
         return response.data;
     },
 
@@ -68,10 +91,10 @@ export const taskService = {
     formatDate: (dateString: string | null): string => {
         if (!dateString) return 'No due date';
         const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'short', 
-            day: 'numeric' 
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
         });
     },
 

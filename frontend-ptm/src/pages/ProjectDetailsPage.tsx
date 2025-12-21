@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, CheckCircle2, Clock, AlertCircle, Trash2, Search, Filter } from 'lucide-react';
+import { ArrowLeft, Plus, CheckCircle2, Clock, AlertCircle, Trash2, Search, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 import { DashboardLayout } from '../layouts/DashboardLayout';
 import { projectService, type ProjectDetails } from '../services/projectService';
-import { taskService, type Task, TaskStatus } from '../services/taskService';
+import { taskService, type Task, TaskStatus, type PageResponse } from '../services/taskService';
 import { loginService } from '../services/loginService';
 import { TaskCard } from '../components/TaskCard';
 import { AddTaskModal } from '../components/AddTaskModal';
@@ -13,7 +13,21 @@ export default function ProjectDetailsPage() {
     const { projectId } = useParams<{ projectId: string }>();
     const [user, setUser] = useState<any>(null);
     const [project, setProject] = useState<ProjectDetails | null>(null);
-    const [tasks, setTasks] = useState<Task[]>([]);
+
+    // For insights/stats - fetch all tasks
+    const [allTasks, setAllTasks] = useState<Task[]>([]);
+
+    // For display - paginated tasks
+    const [paginatedTasks, setPaginatedTasks] = useState<PageResponse<Task>>({
+        content: [],
+        totalElements: 0,
+        totalPages: 0,
+        size: 5,
+        number: 0,
+        first: true,
+        last: true,
+    });
+
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -24,6 +38,10 @@ export default function ProjectDetailsPage() {
     // Search and Filter states
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<'ALL' | TaskStatus>('ALL');
+
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(0);
+    const pageSize = 5;
 
     useEffect(() => {
         // Check if user is authenticated
@@ -42,18 +60,28 @@ export default function ProjectDetailsPage() {
         }
     }, [navigate, projectId]);
 
+    // Fetch paginated tasks when page, search, or filter changes
+    useEffect(() => {
+        if (projectId) {
+            fetchPaginatedTasks(parseInt(projectId), currentPage);
+        }
+    }, [currentPage, projectId]);
+
     const fetchProjectData = async (id: number) => {
         try {
             setLoading(true);
             setError(null);
 
-            const [projectData, tasksData] = await Promise.all([
+            const [projectData, tasksData, paginatedData] = await Promise.all([
                 projectService.getProject(id),
-                taskService.getProjectTasks(id),
+                taskService.getProjectTasks(id), // All tasks for stats
+                taskService.getProjectTasksPage(id, 0, pageSize), // Paginated for display
             ]);
 
             setProject(projectData);
-            setTasks(tasksData);
+            setAllTasks(tasksData);
+            setPaginatedTasks(paginatedData);
+            setCurrentPage(0);
         } catch (err: any) {
             console.error('Error fetching project data:', err);
             setError(err.response?.data?.message || 'Failed to load project');
@@ -69,8 +97,17 @@ export default function ProjectDetailsPage() {
         }
     };
 
-    // Filter and search tasks
-    const filteredTasks = tasks.filter((task) => {
+    const fetchPaginatedTasks = async (id: number, page: number) => {
+        try {
+            const paginatedData = await taskService.getProjectTasksPage(id, page, pageSize);
+            setPaginatedTasks(paginatedData);
+        } catch (err: any) {
+            console.error('Error fetching paginated tasks:', err);
+        }
+    };
+
+    // Filter tasks from paginated content (client-side filtering)
+    const filteredTasks = paginatedTasks.content.filter((task) => {
         // Filter by status
         const matchesStatus = statusFilter === 'ALL' || task.status === statusFilter;
 
@@ -87,19 +124,17 @@ export default function ProjectDetailsPage() {
 
         setIsSubmitting(true);
         try {
-            const newTask = await taskService.createTask(parseInt(projectId), {
+            await taskService.createTask(parseInt(projectId), {
                 title: data.title,
                 description: data.description,
                 dueDate: data.dueDate,
                 status: TaskStatus.IN_PROGRESS,
             });
 
-            setTasks((prev) => [...prev, newTask]);
             setIsModalOpen(false);
 
-            // Refresh project to update stats
-            const updatedProject = await projectService.getProject(parseInt(projectId));
-            setProject(updatedProject);
+            // Refresh all data
+            await fetchProjectData(parseInt(projectId));
         } catch (err: any) {
             console.error('Error creating task:', err);
             alert(err.response?.data?.message || 'Failed to create task');
@@ -111,16 +146,14 @@ export default function ProjectDetailsPage() {
     const handleCompleteTask = async (taskId: number) => {
         if (!projectId) return;
 
-        const task = tasks.find((t) => t.id === taskId);
+        const task = allTasks.find((t) => t.id === taskId);
         if (!task || task.status === TaskStatus.COMPLETED) return;
 
         try {
-            const updatedTask = await taskService.markAsCompleted(parseInt(projectId), taskId);
-            setTasks((prev) => prev.map((t) => (t.id === taskId ? updatedTask : t)));
+            await taskService.markAsCompleted(parseInt(projectId), taskId);
 
-            // Refresh project to update stats
-            const updatedProject = await projectService.getProject(parseInt(projectId));
-            setProject(updatedProject);
+            // Refresh all data
+            await fetchProjectData(parseInt(projectId));
         } catch (err: any) {
             console.error('Error completing task:', err);
             alert(err.response?.data?.message || 'Failed to complete task');
@@ -132,11 +165,9 @@ export default function ProjectDetailsPage() {
 
         try {
             await taskService.deleteTask(parseInt(projectId), taskId);
-            setTasks((prev) => prev.filter((t) => t.id !== taskId));
 
-            // Refresh project to update stats
-            const updatedProject = await projectService.getProject(parseInt(projectId));
-            setProject(updatedProject);
+            // Refresh all data
+            await fetchProjectData(parseInt(projectId));
         } catch (err: any) {
             console.error('Error deleting task:', err);
             alert(err.response?.data?.message || 'Failed to delete task');
@@ -158,6 +189,12 @@ export default function ProjectDetailsPage() {
         }
     };
 
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 0 && newPage < paginatedTasks.totalPages) {
+            setCurrentPage(newPage);
+        }
+    };
+
     if (!user) {
         return (
             <div className="min-h-screen bg-linear-to-br from-slate-50 to-blue-50 flex items-center justify-center">
@@ -166,9 +203,9 @@ export default function ProjectDetailsPage() {
         );
     }
 
-    const completedTasks = tasks.filter((t) => t.status === TaskStatus.COMPLETED).length;
-    const inProgressTasks = tasks.filter((t) => t.status === TaskStatus.IN_PROGRESS).length;
-    const overdueTasks = tasks.filter((t) => taskService.isOverdue(t)).length;
+    const completedTasks = allTasks.filter((t) => t.status === TaskStatus.COMPLETED).length;
+    const inProgressTasks = allTasks.filter((t) => t.status === TaskStatus.IN_PROGRESS).length;
+    const overdueTasks = allTasks.filter((t) => taskService.isOverdue(t)).length;
 
     return (
         <DashboardLayout user={user}>
@@ -221,7 +258,7 @@ export default function ProjectDetailsPage() {
                                         <span className="text-sm font-medium text-blue-600">Total Tasks</span>
                                         <Clock className="w-5 h-5 text-blue-600" />
                                     </div>
-                                    <p className="text-2xl font-bold text-blue-900">{tasks.length}</p>
+                                    <p className="text-2xl font-bold text-blue-900">{allTasks.length}</p>
                                 </div>
 
                                 <div className="bg-green-50 rounded-lg p-4">
@@ -273,7 +310,7 @@ export default function ProjectDetailsPage() {
                                     <div>
                                         <h2 className="text-xl font-semibold text-gray-900">Tasks</h2>
                                         <p className="text-sm text-gray-500 mt-1">
-                                            {filteredTasks.length} of {tasks.length} {tasks.length === 1 ? 'task' : 'tasks'}
+                                            Showing {filteredTasks.length} of {paginatedTasks.totalElements} tasks
                                         </p>
                                     </div>
                                     <button
@@ -315,7 +352,7 @@ export default function ProjectDetailsPage() {
                                 </div>
                             </div>
 
-                            {tasks.length === 0 ? (
+                            {allTasks.length === 0 ? (
                                 <div className="px-6 py-12 text-center">
                                     <CheckCircle2 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                                     <h3 className="text-lg font-semibold text-gray-800 mb-2">No tasks yet</h3>
@@ -334,16 +371,43 @@ export default function ProjectDetailsPage() {
                                     <p className="text-gray-600">Try adjusting your search or filter</p>
                                 </div>
                             ) : (
-                                <div className="p-6 space-y-3">
-                                    {filteredTasks.map((task) => (
-                                        <TaskCard
-                                            key={task.id}
-                                            task={task}
-                                            onComplete={handleCompleteTask}
-                                            onDelete={handleDeleteTask}
-                                        />
-                                    ))}
-                                </div>
+                                <>
+                                    <div className="p-6 space-y-3">
+                                        {filteredTasks.map((task) => (
+                                            <TaskCard
+                                                key={task.id}
+                                                task={task}
+                                                onComplete={handleCompleteTask}
+                                                onDelete={handleDeleteTask}
+                                            />
+                                        ))}
+                                    </div>
+
+                                    {/* Pagination Controls */}
+                                    {paginatedTasks.totalPages > 1 && (
+                                        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+                                            <div className="text-sm text-gray-600">
+                                                Page {currentPage + 1} of {paginatedTasks.totalPages}
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => handlePageChange(currentPage - 1)}
+                                                    disabled={paginatedTasks.first}
+                                                    className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                                >
+                                                    <ChevronLeft className="w-5 h-5" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handlePageChange(currentPage + 1)}
+                                                    disabled={paginatedTasks.last}
+                                                    className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                                >
+                                                    <ChevronRight className="w-5 h-5" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
                             )}
                         </div>
                     </>
