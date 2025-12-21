@@ -282,12 +282,22 @@ Real-time progress calculation showing total tasks, completed tasks, and complet
 
 ## Docker Setup
 
-The application is fully dockerized using Docker Compose (frontend, backend, database).
+The application includes a complete Docker Compose setup for the frontend,
+backend, and PostgreSQL database.
 
-### Status
-The containers build and start correctly. Local (non-Docker) execution is fully functional and was used for feature validation.
+### Status:
+- All containers build and start correctly
+- Database connectivity works as expected
+- Local (non-Docker) execution is fully functional and was used for feature validation
 
-**Note**: Further refinement is planned for Docker security configuration (Spring Security / CORS) to ensure identical behavior across environments.
+**Note:**
+There is a known issue with the Dockerized backend where protected endpoints
+return HTTP 403 responses. This is suspected to be related to Spring Security
+and/or CORS configuration differences between local and containerized environments.
+Due to time constraints, this issue is documented but not fully resolved.
+
+The non-Dockerized version fully satisfies all functional and technical requirements.
+
 
 ### Running with Docker
 
@@ -442,3 +452,4 @@ project-task-manager/
 ├── docker-compose.yml
 └── .env
 ```
+
