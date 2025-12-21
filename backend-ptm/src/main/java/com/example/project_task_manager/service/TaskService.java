@@ -9,6 +9,8 @@ import com.example.project_task_manager.mapper.TaskMapper;
 import com.example.project_task_manager.repository.ProjectRepository;
 import com.example.project_task_manager.repository.TaskRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,6 +57,16 @@ public class TaskService {
         return tasks.stream()
                 .map(taskMapper::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public Page<TaskResponse> getProjectTasksPage(Long projectId, Long userId, Pageable pageable) {
+        // Verify user owns the project
+        projectRepository.findByIdAndUserId(projectId, userId)
+                .orElseThrow(() -> new RuntimeException("Project not found or access denied"));
+
+        Page<Task> tasks = taskRepository.findByProjectId(projectId, pageable);
+        return tasks.map(taskMapper::toResponse);
     }
 
     @Transactional(readOnly = true)

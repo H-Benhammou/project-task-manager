@@ -5,6 +5,10 @@ import com.example.project_task_manager.dto.TaskResponse;
 import com.example.project_task_manager.entity.User;
 import com.example.project_task_manager.service.TaskService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -28,11 +32,30 @@ public class TaskController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<List<TaskResponse>> getAllTasks(
             @PathVariable Long projectId,
             @AuthenticationPrincipal User user) {
         List<TaskResponse> tasks = taskService.getAllProjectTasks(projectId, user.getId());
+        return ResponseEntity.ok(tasks);
+    }
+
+    @GetMapping
+    public ResponseEntity<Page<TaskResponse>> getTasksPage(
+            @PathVariable Long projectId,
+            @AuthenticationPrincipal User user,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "creationDate") String sortBy,
+            @RequestParam(defaultValue = "DESC") String sortDirection) {
+
+        Sort.Direction direction = sortDirection.equalsIgnoreCase("ASC")
+                ? Sort.Direction.ASC
+                : Sort.Direction.DESC;
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
+        Page<TaskResponse> tasks = taskService.getProjectTasksPage(projectId, user.getId(), pageable);
         return ResponseEntity.ok(tasks);
     }
 
