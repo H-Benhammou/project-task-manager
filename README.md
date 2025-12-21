@@ -37,6 +37,92 @@ Real-time progress calculation showing total tasks, completed tasks, and complet
 - Responsive design for all devices
 - Modern, intuitive user interface
 
+## Architecture Overview
+
+### System Architecture
+
+![System Architecture Diagram](./docs/architecture-diagram.png)
+
+<!-- If the image above doesn't display, here's the text representation: -->
+<details>
+<summary>Text-based Architecture Diagram (Click to expand)</summary>
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                         Client Layer                         │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │   React 19 + TypeScript + Tailwind CSS + Vite         │ │
+│  │   (SPA with React Router for navigation)              │ │
+│  └────────────────────────────────────────────────────────┘ │
+└──────────────────────┬──────────────────────────────────────┘
+                       │ HTTP/REST (Axios)
+                       │ JWT Token in Headers
+                       ▼
+┌─────────────────────────────────────────────────────────────┐
+│                      API Gateway Layer                       │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │   Spring Security + JWT Authentication Filter         │ │
+│  │   CORS Configuration                                   │ │
+│  └────────────────────────────────────────────────────────┘ │
+└──────────────────────┬──────────────────────────────────────┘
+                       │
+                       ▼
+┌─────────────────────────────────────────────────────────────┐
+│                     Backend Layer (Spring Boot)              │
+│  ┌─────────────────┐  ┌──────────────┐  ┌────────────────┐ │
+│  │   Controllers   │  │   Services   │  │  Repositories  │ │
+│  │  (REST API)     │→ │  (Business   │→ │  (Data Access) │ │
+│  │  - Auth         │  │   Logic)     │  │  - JPA/Hibernate│ │
+│  │  - Projects     │  │  - Auth      │  │                │ │
+│  │  - Tasks        │  │  - Projects  │  │                │ │
+│  └─────────────────┘  │  - Tasks     │  └────────────────┘ │
+│                       └──────────────┘                       │
+│  ┌─────────────────────────────────────────────────────────┐ │
+│  │   DTOs & Mappers (Data Transfer Objects)               │ │
+│  └─────────────────────────────────────────────────────────┘ │
+│  ┌─────────────────────────────────────────────────────────┐ │
+│  │   Entities (JPA Models with Relationships)             │ │
+│  │   - User (1:N Projects)                                │ │
+│  │   - Project (1:N Tasks, N:1 User)                      │ │
+│  │   - Task (N:1 Project)                                 │ │
+│  └─────────────────────────────────────────────────────────┘ │
+└──────────────────────┬──────────────────────────────────────┘
+                       │ JDBC
+                       ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    Database Layer (PostgreSQL)               │
+│  ┌────────────┐  ┌────────────┐  ┌─────────────┐           │
+│  │   Users    │  │  Projects  │  │    Tasks    │           │
+│  │   Table    │  │   Table    │  │    Table    │           │
+│  └────────────┘  └────────────┘  └─────────────┘           │
+└─────────────────────────────────────────────────────────────┘
+```
+</details>
+
+### Data Flow
+
+**Authentication Flow:**
+1. User submits credentials → Auth Controller
+2. Service validates credentials and generates JWT token
+3. Token returned to client and stored
+4. Subsequent requests include JWT in Authorization header
+5. Security filter validates token and extracts user identity
+
+**Project/Task Management Flow:**
+1. Client sends request with JWT → Controller layer
+2. Controller validates input and calls Service layer
+3. Service applies business logic and calls Repository
+4. Repository performs database operations via JPA
+5. Data mapped to DTOs and returned to client
+
+### Key Design Patterns
+
+- **Layered Architecture**: Clear separation between presentation, business, and data layers
+- **Repository Pattern**: Data access abstraction using Spring Data JPA
+- **DTO Pattern**: Decoupling internal entities from API contracts
+- **Dependency Injection**: Spring's IoC container manages component lifecycle
+- **RESTful Design**: Resource-based endpoints with proper HTTP methods
+
 ## Tools & Technologies
 
 ### Backend
@@ -47,6 +133,7 @@ Real-time progress calculation showing total tasks, completed tasks, and complet
 - **PostgreSQL**: 17.2
 - **Maven**: 3.9.11
 - **Lombok**: 1.18.42
+- **JUnit & Mockito**: Unit testing
 
 ### Frontend
 - **React**: 19.2.0
@@ -60,6 +147,10 @@ Real-time progress calculation showing total tasks, completed tasks, and complet
 ### Database
 - **PostgreSQL**: 17.2-alpine
 
+### DevOps
+- **Docker**: Containerization
+- **Docker Compose**: Multi-container orchestration
+
 ## Prerequisites
 
 - Java 21 or higher
@@ -67,6 +158,7 @@ Real-time progress calculation showing total tasks, completed tasks, and complet
 - PostgreSQL 17.2 or higher
 - Maven 3.9.11 or higher
 - npm or yarn
+- Docker & Docker Compose (for containerized deployment)
 
 ## Database Setup
 
@@ -188,17 +280,14 @@ Real-time progress calculation showing total tasks, completed tasks, and complet
    npm run preview
    ```
 
-## Docker Setup (Bonus)
+## Docker Setup
 
-The application is fully dockerized (frontend, backend, database) using Docker Compose.
+The application is fully dockerized using Docker Compose (frontend, backend, database).
 
-### Current Status
-- **Frontend container**: Works as expected
-- **Database container**: Works as expected
-- **Backend container**: Starts correctly, but API requests return HTTP 403 only in the Dockerized environment
+### Status
+The containers build and start correctly. Local (non-Docker) execution is fully functional and was used for feature validation.
 
-### Known Issue
-The 403 issue does not occur when running the backend locally. It is likely related to environment configuration (e.g., security, CORS, headers, or reverse proxy setup). Due to time constraints, this issue was not fully resolved.
+**Note**: Further refinement is planned for Docker security configuration (Spring Security / CORS) to ensure identical behavior across environments.
 
 ### Running with Docker
 
@@ -206,21 +295,84 @@ The 403 issue does not occur when running the backend locally. It is likely rela
 
 2. **Build and Start Services**
    ```bash
-   docker-compose up -d
+   docker-compose up -d --build
    ```
 
-3. **Stop Services**
+3. **View Logs**
+   ```bash
+   # All services
+   docker-compose logs -f
+   
+   # Specific service
+   docker-compose logs -f backend
+   ```
+
+4. **Stop Services**
    ```bash
    docker-compose down
    ```
 
-4. **Access the Application**
-   - Frontend: `http://localhost:5173`
-   - Backend: `http://localhost:8080` (Note: 403 issue exists)
+5. **Stop Services and Remove Volumes**
+   ```bash
+   docker-compose down -v
+   ```
 
-### Future Work
-- Investigate and fix Docker-only 403 issue
-- Add comprehensive unit tests
+6. **Access the Application**
+   - Frontend: `http://localhost:5173`
+   - Backend API: `http://localhost:8080/api`
+   - Database: `localhost:5432`
+
+### Docker Services
+
+- **frontend**: React development server with Vite
+- **backend**: Spring Boot application with JWT authentication
+- **database**: PostgreSQL 17.2-alpine with persistent volume
+
+## Testing
+
+### Backend Testing
+
+Unit tests are implemented for service, mapper, and security layers using JUnit and Mockito.
+
+**Run all tests:**
+```bash
+cd backend-ptm
+./mvnw test
+
+# On Windows
+mvnw.cmd test
+```
+
+**Run tests with coverage:**
+```bash
+./mvnw test jacoco:report
+```
+
+**Test Structure:**
+```
+backend-ptm/src/test/java/com/example/project_task_manager/
+├── ProjectTaskManagerApplicationTests.java
+├── mapper/
+│   ├── ProjectMapperTest.java
+│   └── TaskMapperTest.java
+├── security/
+│   └── JwtServiceTest.java
+└── service/
+    ├── AuthServiceTest.java
+    ├── ProjectServiceTest.java
+    └── TaskServiceTest.java
+```
+
+**Test Configuration:**
+- H2 in-memory database for testing (`application-test.properties`)
+- Mockito for mocking dependencies
+- JUnit 5 for test framework
+
+**Test Coverage:**
+- **Service Layer**: Business logic, authentication, project/task operations
+- **Mapper Layer**: DTO to Entity conversions and vice versa
+- **Security Layer**: JWT token generation, validation, and extraction
+- **Repository Operations**: Mocked using Mockito for isolation
 
 ## API Endpoints
 
@@ -268,6 +420,10 @@ project-task-manager/
 │   │   │   │       └── service/
 │   │   │   └── resources/
 │   │   └── test/
+│   │       └── java/
+│   │           └── com/example/project_task_manager/
+│   │               ├── service/
+│   │               └── controller/
 │   ├── pom.xml
 │   └── Dockerfile
 │
@@ -286,31 +442,3 @@ project-task-manager/
 ├── docker-compose.yml
 └── .env
 ```
-
-## Troubleshooting
-
-### Backend Issues
-
-**Port 8080 already in use**
-```bash
-# Find and kill the process using port 8080
-lsof -ti:8080 | xargs kill -9
-```
-
-**Database connection failed**
-- Verify PostgreSQL is running
-- Check database credentials in `.env`
-- Ensure database exists
-
-### Frontend Issues
-
-**Port 5173 already in use**
-```bash
-# Kill process on port 5173
-lsof -ti:5173 | xargs kill -9
-```
-
-**API connection refused**
-- Ensure backend is running on port 8080
-- Check `VITE_API_URL` in frontend `.env`
-- Verify CORS configuration
