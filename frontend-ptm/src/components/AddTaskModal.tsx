@@ -41,6 +41,10 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
       newErrors.title = 'Task title is required';
     }
 
+    if (!formData.dueDate) {
+      newErrors.dueDate = 'Due date is required';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -83,7 +87,6 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
             onChange={handleChange}
             error={errors.title}
             placeholder="Enter task title"
-            required
           />
 
           <div className="mb-4">
@@ -102,7 +105,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
 
           <div className="mb-6">
             <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 mb-1">
-              Due Date (Optional)
+              Due Date
             </label>
             <input
               type="date"
